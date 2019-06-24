@@ -32,12 +32,12 @@ namespace Drose
 		MyThread2()
 		{
 			this->moveToThread(&mThread);
-		//	mThread.start();
+			mThread.start();
 
 			connect(this, &MyThread2::finished, &mThread, &QThread::quit);
 			connect(this, &MyThread2::finished, this, &MyThread2::deleteLater);
 			connect(&mThread, &QThread::finished, &mThread, &QThread::deleteLater);
-
+			
 		}
 
 		MyThread2(int index) :mIndex(index)
@@ -55,8 +55,7 @@ namespace Drose
 		}
 
 		void start()
-		{
-			connect(&mThread, &QThread::started, this, &Drose::MyThread2::run);
+		{	
 			mThread.start();
 		}
 
@@ -75,12 +74,12 @@ namespace Drose
 		void finished();
 		
 	public:
-		
+		QThread		mThread;
 
 	private:
 		int		mIndex;
 		QMutex		mMutex;
-		QThread		mThread;
+		
 	};
 }
 

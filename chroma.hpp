@@ -48,7 +48,7 @@ namespace InstrumentApi
 		bool setVoltage(const QString value)
 		{
 			QString tRecv;
-			mpCommunicate->communicate("SOUR:VOLT " + value, tRecv);
+			mpCommunicate->communicate("SOUR:VOLT " + value);
 
 			return true;
 		}

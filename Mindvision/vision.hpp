@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "Include/CameraDefine.H"
@@ -20,17 +19,49 @@
 */
 
 #ifdef _WIN64
-#pragma comment(lib, "Lib/Mindvision/MVCAMSDK_X64.lib")
+#pragma comment(lib, "MVCAMSDK_X64.lib")
 #else
 #pragma comment(lib, "MVCAMSDK.lib")
 #endif
 
 #define MAX_PATH          260
 
-
-
 namespace MachineVision
 {
+	static void roiSnap(const QString path)
+	{
+		Mat mat = imread(path.toStdString(), IMREAD_COLOR);
+
+		int m = mat.rows;
+		int n = mat.cols;
+		Rect rectL(0, 0, n*0.5, m * 1);
+		Mat tempL(mat, rectL);
+		cv::imwrite("Snapshot/Left.BMP", tempL);
+
+		Rect rectR(n*0.5, 0, n * 0.5, m * 1);
+		Mat tempR(mat, rectR);
+		cv::imwrite("Snapshot/Right.BMP", tempR);
+	}
+
+	static void linePicture(QString path){
+		Mat mat = imread((path + "/tSnap.BMP").toStdString(), IMREAD_COLOR);
+
+		int x0 = mat.cols * 0.5;
+		int y0 = 0;
+
+		int x1 = mat.cols * 0.5;
+		int y1 = mat.rows;
+
+		cv::Point p0 = cv::Point(x0, y0);
+		cv::Point p1 = cv::Point(x1, y1);
+		cv::line(mat, p0, p1, cv::Scalar(0, 0, 255), 3, 4);
+
+		//	cv::imshow("mat", mat);
+		cv::imwrite((path + "/tLine.BMP").toStdString(), mat);
+		cv::waitKey(10);
+	}
+
+
 	class MindVision : public QObject
 	{
 	//	Q_OBJECT
@@ -152,7 +183,7 @@ namespace MachineVision
 			//ASSERT(m_hDispThread);
 			//SetThreadPriority(m_hDispThread, THREAD_PRIORITY_HIGHEST);
 			
-			pWorkThread->start();
+//			pWorkThread->start();
 #endif
 			//Tell the camera begin to sendding image			
 			CameraPlay(m_hCamera);		
@@ -163,16 +194,14 @@ namespace MachineVision
 			return true;
 		}
 
-		void snapshot()
-		{
-
+		void snapshot(const QString sFileName){
 		//	CameraPause(m_hCamera);
 			CameraPlay(m_hCamera);
 
 			tSdkFrameHead FrameInfo;
 			BYTE *pRawBuffer;
 			BYTE *pRgbBuffer;
-			QString sFileName;
+			
 			tSdkImageResolution sImageSize;
 			CameraSdkStatus status;
 			QString msg;
@@ -209,7 +238,6 @@ namespace MachineVision
 				QString msg;
 				char sCurpath[MAX_PATH];
 				QString strTime = QTime::currentTime().toString();
-				sFileName = QDir::currentPath() + "/Snapshot/a.jpg";
 				
 				// Apply a buffer, used to convert the raw data obtained to RGB data, and also get the image processing effect
 				pRgbBuffer = (BYTE *)CameraAlignMalloc(FrameInfo.iWidth*FrameInfo.iHeight * 4, 16);
@@ -243,9 +271,7 @@ namespace MachineVision
 					msg = QString("Snapshot one image to file:[%1.BMP]").arg(sFileName);
 					qDebug() << msg;
 				}
-
 				CameraAlignFree(pRgbBuffer);
-
 			}
 		}
 

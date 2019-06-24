@@ -14,7 +14,9 @@ namespace CommunicateClass
 	{
 	public:
 		virtual bool init() = 0;
+		virtual void communicate(QString) = 0;
 		virtual bool communicate(QString, QString&) = 0;
+		virtual bool communicate(QByteArray, QByteArray&) = 0;
 	};
 
 	class ComPortOne : public CommunicateInterface
@@ -52,6 +54,7 @@ namespace CommunicateClass
 			if (mpSerial->open(QIODevice::ReadWrite)) 
 			{
 				qDebug() << "open com" << mPortNo << " success" << "\r";
+				mbInit = true;
 				return true;
 			}
 			else 
@@ -103,8 +106,21 @@ namespace CommunicateClass
 			return mRecData;
 		}
 
+		void communicate(const QString tSend){
+			if (!mbInit){
+				qDebug() << "mbInit:false";
+				return;
+			}
+			send(tSend);
+		}
+
 		bool communicate(const QString tSend, QString& mRecv)
 		{
+			if (!mbInit){
+				qDebug() << "mbInit:false";
+				return false;
+			}
+
 			auto a = send(tSend);
 			
 			qDebug() << "send success?" << a << "\r";
@@ -118,6 +134,11 @@ namespace CommunicateClass
 
 		bool communicate(const QByteArray tSend, QByteArray& mRecv)
 		{
+			if (!mbInit){
+				qDebug() << "mbInit:false";
+				return false;
+			}
+
 			auto a = mpSerial->write(tSend);
 
 			qDebug() << "send success?" << a << "\r";
@@ -152,6 +173,7 @@ namespace CommunicateClass
 		}
 
 	private:
+		bool mbInit = false;
 		unsigned int mPortNo;
 		int mBaudRate;
 		std::shared_ptr <QSerialPort> mpSerial = std::make_shared<QSerialPort>();
@@ -191,6 +213,7 @@ namespace CommunicateClass
 			}
 
 			qDebug() << mIp << "connect ok.";
+			mbInit = true;
 			return true;
 		}
 
@@ -209,8 +232,6 @@ namespace CommunicateClass
 
 			auto re = mpTcpSocket->write(msg.toLatin1(), msg.length());
 		}
-
-		
 		
 		bool getRec()
 		{
@@ -250,24 +271,33 @@ namespace CommunicateClass
 
 			return true;
 		}
+		
+		void communicate(QString tSend){
+			send(tSend);
+		}
 
 		bool communicate(const QString tSend, QString& mRecv)
 		{
-			/*
-			if (false == init())
-			{
+			if (!mbInit){
+				qDebug() << "mbInit:false";
 				return false;
 			}
-			*/
-
+			
 			send(tSend);
 
-			if (false == getRec(mRecv))
-			{
+			if (false == getRec(mRecv)){
 				return false;
 			}
 
 		//	disConnect();
+			return true;
+		}
+
+		bool communicate(QByteArray, QByteArray&){
+			if (!mbInit){
+				qDebug() << "mbInit:false";
+				return false;
+			}
 
 			return true;
 		}
@@ -287,11 +317,11 @@ namespace CommunicateClass
 
 		QTcpSocket *mpTcpSocket;
 	private:
+		bool mbInit = false;
 		QString mIp;
 		QString userName;
 		int mPort;
 		QHostAddress *mpQHostAddress;
-		
 		QString mRecData;
 	
 	};

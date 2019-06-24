@@ -66,6 +66,14 @@ namespace InstrumentApi
 		const QString currentDc = "CURR:DC?";
 		const QString frequency = "FREQUENCY?";
 
+		float getMeasure(const QString type, QString channel){
+			QString cmd = "MEAS:" + type + " (@" + channel + ")\r\n";
+			QString tRecv;
+			mpCommunicate->communicate(cmd, tRecv);
+
+			return tRecv.toFloat();
+		}
+
 		bool getMeasure(const QString type, QString channel, float& value)
 		{
 			QString cmd = "MEAS:" + type + " (@" + channel + ")\r\n";

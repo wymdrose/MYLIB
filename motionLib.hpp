@@ -24,8 +24,8 @@
 #endif // _M_IX86
 
 
-namespace _MOTIONCLASS
-{
+namespace MotionControl{
+
 	#define startVel	5000
 	#define maxVel		10000
 	#define accT		0.1
@@ -35,28 +35,23 @@ namespace _MOTIONCLASS
 	#define paraS		1
 
 
-	enum MOTION_CARD_TYPE
-	{
+	enum MotionCardType{
 		DMC5000,
 		PCI7856
 	};
 
-	enum MOVE_TYPE
-	{
+	enum MoveType{
 		SingleAxisPositionMove,
 		SingleAxisSpeedMove
 
 	};
 
-	struct DMC5000InitialPara
-	{
+	struct DMC5000InitialPara{
 		WORD  CardIdList[8];		//定义卡号数组
 		DWORD CardTypeList[8];		//定义各卡类型
 	};
 
-	struct HomePara
-	{
-		
+	struct HomePara{	
 		WORD outmode = 0;
 
 		double Min_Vel = 0;		double Max_Vel = 0;
@@ -69,14 +64,13 @@ namespace _MOTIONCLASS
 		WORD EZ_count = 0;
 	};
 
-	struct MovePara
-	{
+	struct MovePara{
 		double Min_Vel = 500; double Max_Vel = 10000; double Tacc = 0.1; double Tdec = 0.1; double stop_vel = 0;
 		WORD s_mode; double s_para;
 
 		WORD posiMode = 1;		//Absolute motion
 		bool bLogic = true;	//direction
-		MOVE_TYPE moveType = SingleAxisPositionMove;
+		MoveType moveType = SingleAxisPositionMove;
 		const int moveTimeOut = 100000;
 	};
 
@@ -87,11 +81,10 @@ namespace _MOTIONCLASS
 		I32 cardName = 0; 
 	};
 
-class MOTIONLib
-{
+class MotionApi{
 public:
-	MOTIONLib(){};
-	~MOTIONLib(){};
+	MotionApi(){};
+	~MotionApi(){};
 
 	virtual bool initial() = 0;
 	virtual bool move(int, int, long) = 0;
@@ -110,27 +103,91 @@ private:
 	
 };
 
-class Dmc1380
-{
+class Dmc1380 : MotionApi{
+public:
+	Dmc1380(){
+		mCardNumber = d1000_board_init();
+		mStart.resize(3);
+		mMSpeed.resize(3);
+		mTAcc.resize(3);
+	}
+
+	~Dmc1380(){
+		d1000_board_close();
+	}
+
+	bool initial(){
+		if (!mCardNumber){
+			qDebug() << "no motion card found.";
+			return false;
+		}
+		qDebug() << QString("Dmc1380:%1").arg(mCardNumber);
+
+		for (size_t i = 0; i < 3; i++){
+			d1000_set_sd(i, 0);
+			d1000_set_pls_outmode(i ,0);
+			mStart[i] = 500;
+			mMSpeed[i] = 1000;
+			mTAcc[i] = 0.1;
+		}
+		
+		return true;
+	}
+
+	void setPara(QVector<int> start, QVector<int> maxSpeed, QVector<double> acc){
+		mStart = start;
+		mMSpeed = maxSpeed;
+		mTAcc = acc;
+	}
+
+	bool home(int nAxis){
+		d1000_home_move(nAxis, mStart[nAxis], mMSpeed[nAxis], mTAcc[nAxis]);
+		return true;
+
+		d1000_set_command_pos(nAxis, 0)
+			;
+	}
+
+	bool move(int, int, long){ return true; }
+
+	bool move(int nAxis, int nPulse){
+		d1000_start_ta_move(nAxis, nPulse, mStart[nAxis], mMSpeed[nAxis], mTAcc[nAxis]);
+		return true;
+	}
+
+	void stop(){
+		
+	
+	}
 
 
+	bool check(int nAxis){
+		return d1000_check_done(nAxis);
+		//3: -
+		//4: o
+	}
 
+	void ioOut(short bitNo, short bitData){
+		d1000_out_bit(bitNo, bitData);
+	}
 
-
-
+private:
+	int mCardNumber;
+	int mDir = 1;
+	QVector<int> mStart;
+	QVector<int> mMSpeed;
+	QVector<double> mTAcc;
+	
 };
 
-class DMC5000Lib : public MOTIONLib
-{
+class DMC5000Lib : public MotionApi{
 	#define ABSOLUTE_MOTION 1
 	#define RELATIVE_MOTION 0
 
 	#define ORG 1<<4
 
-	class DmcAxis
-	{
+	class DmcAxis{
 	public:
-
 		DmcAxis(int cardNo, int axisNo) : mCardNo(cardNo), mAxisNo(axisNo)
 		{}
 		//
@@ -234,7 +291,7 @@ class DMC5000Lib : public MOTIONLib
 			double Min_Vel = startVel,  double Tacc = accT, double Tdec = decT, double stop_vel = stopVel,
 			WORD s_mode = modeS, double s_para = paraS,
 			bool bLogic = true,		//positive
-			MOVE_TYPE moveType = SingleAxisPositionMove)
+			MoveType moveType = SingleAxisPositionMove)
 		{
 			mMovePara.Max_Vel = Max_Vel;
 			mMovePara.Min_Vel = Min_Vel; 
@@ -392,8 +449,7 @@ public:
 		}		
 	}
 
-	bool initial()
-	{
+	bool initial(){
 		auto a = dmc_board_init();
 
 		if (a <= 0)   //控制卡的初始化操作
@@ -442,9 +498,7 @@ public:
 	
 };
 
-
-class PCI7856Lib : public MOTIONLib
-{
+class PCI7856Lib : public MotionApi{
 public:
 	PCI7856Lib()
 	{
@@ -452,8 +506,7 @@ public:
 	}
 	~PCI7856Lib(){}
 
-	bool initial()
-	{
+	bool initial()	{
 		I32 ret;				// Return code. [ㄧΑ肚]
 		
 		I32 cardId = 0;	// Device ID [北ID]
@@ -524,7 +577,6 @@ public:
 
 	bool move()
 	{
-
 		return true;
 	}
 
@@ -534,14 +586,11 @@ public:
 	}
 
 
-	
-
 private:
 	PCI7856InitialPara mInitialPara;
 //	static PCI7856Lib mHomePara;
 //static PCI7856Lib mMovePara;
 };
-
 
 };//namespace
 

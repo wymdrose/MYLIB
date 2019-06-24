@@ -15,11 +15,12 @@ using namespace cv::ml;
 class TubeKnn
 {
 public:
-	static QString getTubeValue(cv::String pathTube)
+	static bool getTubeValue(QString pathTube, QString result)
 	{
-		Mat image_org = imread(pathTube, IMREAD_COLOR);
+		Mat image_org = imread(pathTube.toStdString(), IMREAD_COLOR);
 		imshow("image_org", image_org);
-		Mat image_gry = imread(pathTube, IMREAD_GRAYSCALE);
+
+		Mat image_gry = imread(pathTube.toStdString(), IMREAD_GRAYSCALE);
 		if (image_gry.empty())
 			return "empty";
 
@@ -31,13 +32,14 @@ public:
 
 		// convert to binary image
 		Mat image_bin;
-		threshold(image_gry, image_bin, 150, 255, THRESH_BINARY);
+		threshold(image_gry, image_bin, 100, 255, THRESH_BINARY);
 		imshow("image_gry", image_gry);
 		imshow("image_bin", image_bin);
 
 		Mat image_dil;
 		Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
 		dilate(image_bin, image_dil, element);
+	
 		imshow("image_dil1", image_dil);
 
 		vector<vector<Point> > contours_out;
@@ -65,7 +67,7 @@ public:
 			if (!IsAllWhite(image_dil(num_location.at(i))))
 			{
 				tube.push_back(image_bin(num_location.at(i)));
-				sprintf(filenamew, "%s%d.jpg", "loaction", tube_num);
+				sprintf(filenamew, "Snapshot/%s%d.jpg", "loaction", tube_num);
 				imshow(filenamew, tube.at(tube_num));
 				imwrite(filenamew, tube.at(tube_num));
 				tube_num++;
@@ -74,17 +76,12 @@ public:
 		cout << tube_num << endl;
 
 		char trainfile[100];
-		//vector<Mat> traindata;
-		//vector<int> trainlabel;
+
 		Mat traindata, trainlabel, tmp;
 		for (int i = 0; i < 10; i++)
 		{
 			sprintf(trainfile, "%s\\%d.jpg", TRAINPATH, i);
 
-			//traindata.push_back(imread(trainfile, IMREAD_GRAYSCALE));
-			//trainlabel.push_back(i);
-			//threshold(traindata.at(i), traindata.at(i), 50, 255, THRESH_BINARY);
-			//resize(traindata.at(i), traindata.at(i), Size(NORMWIDTH, NORMHEIGHT));
 			tmp = imread(trainfile, IMREAD_GRAYSCALE);
 			threshold(tmp, tmp, 100, 255, THRESH_BINARY);
 			cv::resize(tmp, tmp, Size(NORMWIDTH, NORMHEIGHT));
@@ -106,19 +103,15 @@ public:
 		traindata.push_back(tmp.reshape(0, 1));
 		trainlabel.push_back(int('D'));
 
-
 		//
 		traindata.convertTo(traindata, CV_32F);
-
 
 		int K = 1;
 		Ptr<TrainData> tData = TrainData::create(traindata, ROW_SAMPLE, trainlabel);
 		Ptr<KNearest> knn = KNearest::create();
 		knn->setDefaultK(K);
 		knn->setIsClassifier(true);
-		knn->train(tData);
-
-		QString result;
+		knn->train(tData);	
 
 		for (int i = 0; i < tube_num; i++)
 		{
@@ -142,9 +135,9 @@ public:
 			
 		}
 
-		//	waitKey(0);
-		//	destroyAllWindows();
-		return result;
+		waitKey(0);
+		destroyAllWindows();
+		return true;
 	}
 
 	static bool IsAllWhite(Mat inputmat)

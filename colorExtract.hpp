@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <opencv2/opencv.hpp> 
@@ -12,26 +10,24 @@ using namespace cv;
 namespace OpencvApi{
 
 	static int HSV[11][6] = {
-		0, 180, 0, 255, 0, 46,
-		0, 180, 0, 43, 46, 220,
-		0, 180, 0, 30, 221, 255,
+		0, 180, 0, 255, 0, 46,	//black
+		0, 180, 0, 43, 46, 220,	//grey
+		0, 180, 0, 30, 221, 255,//white
 
-		0, 10, 43, 255, 46, 255,
-		156, 180, 43, 255, 46, 255,
+		0, 10, 43, 255, 46, 255,	//red
+		156, 180, 43, 255, 46, 255, //red
 
-		11, 25, 43, 255, 46, 255,
-		26, 34, 43, 255, 46, 255,
-		35, 77, 43, 255, 46, 255,
-		78, 99, 43, 255, 46, 255,
-		100, 124, 43, 255, 46, 255,
-		125, 155, 43, 255, 46, 255
+		11, 25, 43, 255, 46, 255,	//orange
+		26, 34, 43, 255, 46, 255,	//yellow
+		35, 77, 43, 255, 46, 255,	//green
+		78, 99, 43, 255, 46, 255,	//cyan
+		100, 124, 43, 255, 46, 255, //blue
+		125, 155, 43, 255, 46, 255	//purple
 	};
 	
 
-	class ColorExtract{
-		
-	public:
-		
+	class ColorExtract{	
+	public:	
 		void get()
 		{
 			Mat matSrc = imread("color.BMP", IMREAD_UNCHANGED);
@@ -116,7 +112,6 @@ namespace OpencvApi{
 
 		void getOne(int HSV[], int flag)
 		{
-
 			Mat imgOriginal = imread("cable.jpg", IMREAD_COLOR);
 
 			int m = imgOriginal.rows;
@@ -173,7 +168,46 @@ namespace OpencvApi{
 			waitKey(1);
 		
 		}
-	};
+	
+		bool checkColor(int HSV[],QString path){
+
+			Mat imgOriginal = imread(path.toStdString(), IMREAD_COLOR);
+
+			Mat imgHSV;
+			vector<Mat> hsvSplit;
+			cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV);
+
+			split(imgHSV, hsvSplit);
+			equalizeHist(hsvSplit[2], hsvSplit[2]);
+			merge(hsvSplit, imgHSV);
+
+			Mat imgThresholded;
+
+			inRange(imgHSV, Scalar(HSV[0], HSV[2], HSV[4]), Scalar(HSV[1], HSV[3], HSV[5]), imgThresholded);
+			imshow("Thresholded1", imgThresholded);
+
+			Mat element = getStructuringElement(MORPH_RECT, Size(10, 10));
+			
+			morphologyEx(imgThresholded, imgThresholded, MORPH_OPEN, element);
+			//dilate(imgThresholded, imgThresholded, element);
+			
+			imshow("Thresholded2", imgThresholded);
+			imshow("Original", imgOriginal);
+
+			vector<vector<Point> > contours_out;
+			vector<Vec4i> hierarchy;
+			findContours(imgThresholded, contours_out, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+
+			waitKey(1);
+
+			if (contours_out.size() > 0)
+			{
+				return true;
+			}
+			
+			return false;
+		}	
+};
 
 	class CableExtract
 	{
