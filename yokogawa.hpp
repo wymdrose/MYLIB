@@ -7,9 +7,13 @@ using namespace Visa;
 namespace InstrumentApi{
 	
 	class Wt230{
+
 	public:
 		Wt230(){}
 		~Wt230(){}
+		
+		unsigned char data1[READ_BUFFER_SIZE];
+		ViSession inst;
 
 		bool init(){
 			status = viOpenDefaultRM(&defaultRM);
@@ -38,6 +42,15 @@ namespace InstrumentApi{
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
 
+			strcpy(stringinput, "AA1\n");
+			BytesToWrite = (ViUInt32)strlen(stringinput);
+			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
+
+			strcpy(stringinput, "AV1\n");
+			BytesToWrite = (ViUInt32)strlen(stringinput);
+			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
+
+			/*
 			strcpy(stringinput, "RV7\n");
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
@@ -45,7 +58,7 @@ namespace InstrumentApi{
 			strcpy(stringinput, "RA7\n");
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
-
+			*/
 			strcpy(stringinput, "MN0\n");
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
@@ -99,8 +112,8 @@ namespace InstrumentApi{
 			return true;
 		}
 
-		float getPower(int m){
-
+		bool getPower(int m, QString& value){
+			/*
 			strcpy(stringinput, QString("DA1;EA%0;DB2;EB%0;DC3;EC%0\n").arg(m).toStdString().c_str());
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
@@ -108,15 +121,28 @@ namespace InstrumentApi{
 			strcpy(stringinput, QString("OF1,3,%0\n").arg(m).toStdString().c_str());
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
+			*/
 
+			viPrintf(inst, QString("DA1;EA%0;DB2;EB%0;DC3;EC%0\n").arg(m).toStdString().c_str());
+			viPrintf(inst, QString("OF1,3,%0\n").arg(m).toStdString().c_str());
+			
+			/*
+			char tData[50];
+			viScanf(inst, tData);
+			*/
+			
 			memset(data1, 0, READ_BUFFER_SIZE);
 			strcpy(stringinput, "OD\n");
 			BytesToWrite = (ViUInt32)strlen(stringinput);
 			status = viWrite(inst, (ViBuf)stringinput, BytesToWrite, &rcount);
+			Sleep(500);
 			status = viReadAsync(inst, data1, READ_BUFFER_SIZE - 1, &job);
+			QStringList tValue = QString((char*)&data1[1]).split(",");
+			
 
-			QStringList tValue = QString((char*)data1).split(",");
-			return tValue[m - 1].right(tValue[m-1].length() - 1).toFloat();
+		//	value = tValue[m - 1].right(tValue[m - 1].length() - 1).toFloat();
+			value = tValue[0].right(tValue[0].length() - 1);
+			return true;		
 		}
 
 

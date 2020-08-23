@@ -125,7 +125,7 @@ public:
 
 		for (size_t i = 0; i < 3; i++){
 			d1000_set_sd(i, 0);
-			d1000_set_pls_outmode(i ,0);
+//			d1000_set_pls_outmode(i ,0);
 			mStart[i] = 500;
 			mMSpeed[i] = 1000;
 			mTAcc[i] = 0.1;

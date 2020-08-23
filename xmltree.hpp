@@ -271,7 +271,7 @@ namespace Treexml
 			tw->show();
 			tw->expandAll();
 		}
-};
+	};
 
 	class Paraxml
 	{

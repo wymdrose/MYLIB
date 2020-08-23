@@ -1,7 +1,7 @@
 #pragma once
 
-#include "communicateLib.hpp"
-#include <memory>
+#include "communicateLib.h"
+#pragma comment(lib, "CommunicateLib.lib")
 
 namespace InstrumentApi
 {
@@ -16,7 +16,7 @@ namespace InstrumentApi
 	public:
 		Ks34970A_2A(unsigned int portNo, int baudRate)
 		{
-			mpCommunicate = static_cast<std::shared_ptr<CommunicateClass::CommunicateInterface>>(std::make_shared<CommunicateClass::ComPortOne>(portNo, baudRate));
+			mpCommunicate = static_cast<std::shared_ptr<CommunicateDrose::CommunicateInterface>>(std::make_shared<CommunicateDrose::ComPortOne>(portNo, baudRate,10,5000));
 
 		}
 
@@ -87,7 +87,7 @@ namespace InstrumentApi
 
 
 	private:
-		std::shared_ptr<CommunicateClass::CommunicateInterface> mpCommunicate;
+		std::shared_ptr<CommunicateDrose::CommunicateInterface> mpCommunicate;
 	};
 }
 

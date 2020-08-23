@@ -67,7 +67,7 @@ namespace FileIo
 			}
 		}
 
-		for (int i = pTableWidget->rowCount() - 1; i >= 0; i--)//É¾³ýÄ©Î²¿Õ°×ÐÐ
+		for (int i = pTableWidget->rowCount() - 1; i >= 0; i--) 
 		{
 			QTableWidgetItem *item = pTableWidget->item(i, 0);
 			if (item == NULL)

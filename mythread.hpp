@@ -5,6 +5,36 @@
 
 namespace Drose
 {
+
+	class WorkerThread : public QThread
+	{
+
+		Q_OBJECT
+	public:
+		WorkerThread(int index) :mIndex(index)
+		{
+
+		}
+
+		void run() Q_DECL_OVERRIDE;
+		/*
+		void run() Q_DECL_OVERRIDE
+		{
+			QString result;
+			emit resultReady(result);
+		}
+		*/
+
+	signals:
+		void signalSend(int, QByteArray);
+		void resultReady(const QString &s);
+
+	private:
+		int		mIndex;
+		QMutex		mMutex;
+	};
+
+
 	class MyThread1 : public QThread
 	{
 	public:
@@ -23,7 +53,6 @@ namespace Drose
 	private:
 		volatile bool isStop;
 	};
-
 
 	class MyThread2 : public QObject
 	{
@@ -63,14 +92,14 @@ namespace Drose
 
 		void startOnce()
 		{
-			connect(&mThread, &QThread::started, this, &Drose::MyThread2::once);
+		//	connect(&mThread, &QThread::started, this, &Drose::MyThread2::once);
 			mThread.start();
 		}
 
 		void once();
 
 	signals:
-		void showDialogSignal(const QString&);
+		void showDialogSignal(const QString, const QString);
 		void finished();
 		
 	public:
@@ -81,6 +110,7 @@ namespace Drose
 		QMutex		mMutex;
 		
 	};
+
 }
 
 

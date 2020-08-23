@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "communicateLib.hpp"
-#include <memory>
+#include "communicateLib.h"
+#pragma comment(lib, "CommunicateLib.lib")
 
 namespace InstrumentApi
 {
@@ -11,7 +11,7 @@ namespace InstrumentApi
 	public:
 		Chroma62000H(unsigned int portNo, int baudRate)
 		{
-			mpCommunicate = static_cast<std::shared_ptr<CommunicateClass::CommunicateInterface>>(std::make_shared<CommunicateClass::ComPortOne>(portNo, baudRate));
+			mpCommunicate = static_cast<std::shared_ptr<CommunicateDrose::CommunicateInterface>>(std::make_shared<CommunicateDrose::ComPortOne>(portNo, baudRate));
 		}
 
 		Chroma62000H()
@@ -31,8 +31,8 @@ namespace InstrumentApi
 				return 0;
 			}
 
-			QString tRecv;
-			mpCommunicate->communicate("*RST;*CLS\r\n", tRecv);
+	//		QString tRecv;
+	//		mpCommunicate->communicate("*RST;*CLS\r\n", tRecv);
 
 			return 0;
 		}
@@ -48,15 +48,15 @@ namespace InstrumentApi
 		bool setVoltage(const QString value)
 		{
 			QString tRecv;
-			mpCommunicate->communicate("SOUR:VOLT " + value);
-
+			mpCommunicate->communicate("SOUR:VOLT " + value + "\r\n", tRecv, 0);
+		
 			return true;
 		}
 
 		bool setCurrent(const QString value)
 		{
 			QString tRecv;
-			mpCommunicate->communicate("SOUR:CURR " + value, tRecv);
+			mpCommunicate->communicate("SOUR:CURR " + value + "\r\n", tRecv, 0);
 
 			return true;
 		}
@@ -65,13 +65,13 @@ namespace InstrumentApi
 		{
 
 			QString tRecv;
-			mpCommunicate->communicate("CONFigure:OUTPut " + on_off ? "ON" : "OFF", tRecv);
+			mpCommunicate->communicate(on_off ? "CONFigure:OUTPut ON\r\n" : "CONFigure:OUTPut OFF\r\n", tRecv, 0);
 
 
 		}
 
 	private:
-		std::shared_ptr<CommunicateClass::CommunicateInterface> mpCommunicate;
+		std::shared_ptr<CommunicateDrose::CommunicateInterface> mpCommunicate;
 
 	};
 
